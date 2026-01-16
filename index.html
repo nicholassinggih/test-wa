@@ -6,52 +6,60 @@
     <title>Sinar Agung - Pesan</title>
     <link rel="manifest" href="manifest.json">
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #f4f4f9; margin: 0; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; width: 80%; }
-        img { width: 100%; border-radius: 10px; margin-bottom: 15px; }
-        button { background: #25D366; color: white; border: none; padding: 12px 20px; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        body { font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #f0f2f5; margin: 0; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); text-align: center; width: 90%; max-width: 350px; }
+        img { width: 100%; border-radius: 10px; border: 1px solid #eee; margin: 15px 0; }
+        .order-info { text-align: left; font-size: 14px; background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+        button { background: #25D366; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; width: 100%; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>Kirim Pesanan</h2>
-        <img id="orderImage" src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=500" alt="Order Preview">
-        <p>Klik tombol di bawah untuk kirim detail pesanan via WhatsApp.</p>
-        <button onclick="shareOrder()">Bagikan ke WhatsApp</button>
+        <h3>Konfirmasi Pesanan</h3>
+        <div class="order-info">
+            <strong>Order ID:</strong> #SA-889<br>
+            <strong>Status:</strong> Siap Dikirim
+        </div>
+        
+        <img id="orderImage" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAA1BMVEUAn89Y6B39AAAASElEQVR4nO3BgQAAAADDoPlTX+AIVQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwDcaiAAFXD1ujAAAAAElFTkSuQmCC" alt="Order Preview">
+        
+        <button onclick="shareToWhatsApp()">Kirim ke WhatsApp</button>
     </div>
 
     <script>
-        // Register Service Worker for PWA
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-
-        async function shareOrder() {
+        async function shareToWhatsApp() {
             const imgElement = document.getElementById('orderImage');
-            
-            try {
-                // 1. Fetch the image and convert to blob
-                const response = await fetch(imgElement.src);
-                const blob = await response.blob();
-                
-                // 2. Create a File object
-                const file = new File([blob], 'pesanan-sinar-agung.jpg', { type: 'image/jpeg' });
+            const base64Data = imgElement.src;
 
-                // 3. Check if sharing is supported
+            // Teks yang akan menjadi CAPTION gambar
+            const pesanTeks = `Halo Sinar Agung,\n\nSaya ingin memesan item sesuai gambar tersebut.\n\nNomor Referensi: *SA-889*\nTanggal: ${new Date().toLocaleDateString('id-ID')}\n\nMohon segera diproses ya!`;
+
+            try {
+                // 1. Ambil data gambar
+                const res = await fetch(base64Data);
+                const blob = await res.blob();
+                
+                // 2. Bungkus menjadi File
+                const file = new File([blob], 'pesanan-agung.png', { type: 'image/png' });
+
+                // 3. Gabungkan File dan Text dalam satu kali share
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                     await navigator.share({
-                        files: [file],
-                        title: 'Pesanan Sinar Agung',
-                        text: 'Halo, saya ingin memesan barang sesuai gambar ini. Mohon diproses.',
+                        files: [file],      // Gambar
+                        text: pesanTeks,    // Caption (Teks di bawah gambar)
                     });
+                    console.log('Berhasil membagikan gambar dan teks.');
                 } else {
-                    alert('Browser Anda tidak mendukung berbagi file.');
+                    alert('Browser/HP tidak mendukung fitur share ini.');
                 }
             } catch (error) {
-                console.error('Error sharing:', error);
-                alert('Gagal membagikan pesanan.');
+                console.error('Error:', error);
             }
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
         }
     </script>
 </body>
